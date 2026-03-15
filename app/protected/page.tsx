@@ -1,42 +1,84 @@
 import { redirect } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/server";
-import { InfoIcon } from "lucide-react";
-import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps";
-import { Suspense } from "react";
+import { CheckCircle } from "lucide-react";
+import { LogoutButton } from "@/components/logout-button";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-async function UserDetails() {
+export default async function ProtectedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string }>;
+}) {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error || !data?.claims) {
-    redirect("/auth/login");
-  }
+  if (error || !user) redirect("/auth/login");
 
-  return JSON.stringify(data.claims, null, 2);
-}
+  const { success } = await searchParams;
+  const email = user.email;
 
-export default function ProtectedPage() {
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status, plan, current_period_end")
+    .eq("user_id", user.id)
+    .single();
+
+  const plan = subscription?.plan;
+  const renewDate = subscription?.current_period_end
+    ? new Date(subscription.current_period_end).toLocaleDateString()
+    : null;
+
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated
-          user
+    <div className="min-h-screen flex flex-col">
+      <nav className="w-full border-b border-b-foreground/10 h-16 flex items-center px-6 justify-between">
+        <Link href="/protected" className="font-semibold">App</Link>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">{email}</span>
+          <LogoutButton />
         </div>
-      </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          <Suspense>
-            <UserDetails />
-          </Suspense>
-        </pre>
-      </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
-        <FetchDataSteps />
+      </nav>
+
+      <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6 max-w-2xl mx-auto w-full">
+
+        {success === "true" ? (
+          <div className="w-full flex flex-col items-center gap-4 py-10 border rounded-xl bg-green-500/10 border-green-500/30">
+            <CheckCircle className="text-green-500" size={64} />
+            <h1 className="text-2xl font-bold">Payment successful!</h1>
+            <p className="text-muted-foreground text-center">
+              {plan === "monthly"
+                ? `Monthly plan active. Renews ${renewDate}.`
+                : "Lifetime access activated. Enjoy forever!"}
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/pricing">Manage subscription</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="w-full flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Welcome back!</h1>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/pricing">Manage subscription</Link>
+              </Button>
+            </div>
+
+            <div className="w-full flex items-center gap-3 p-4 rounded-xl border border-green-500/30 bg-green-500/10">
+              <CheckCircle className="text-green-500 shrink-0" size={20} />
+              <div>
+                <p className="font-medium">Subscription active</p>
+                <p className="text-sm text-muted-foreground">
+                  {plan === "lifetime"
+                    ? "Lifetime access · Never expires"
+                    : `Monthly plan · Renews ${renewDate}`}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-muted-foreground">This is where the main app content goes.</p>
+          </div>
+        )}
+
       </div>
     </div>
   );
