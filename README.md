@@ -1,6 +1,6 @@
 # Stripe + Supabase — Full-Stack Subscription Demo
 
-This project was built to demonstrate real-world integration of **Stripe Payments** and **Supabase Auth** in a **Next.js 15** application. It showcases a complete subscription flow from user registration to paid access — the kind of feature commonly required in SaaS products.
+This project was built to demonstrate real-world integration of **Stripe Payments** and **Supabase Auth** in a **Next.js 16** application. It showcases a complete subscription flow from user registration to paid access — the kind of feature commonly required in SaaS products.
 
 ---
 
@@ -26,7 +26,7 @@ This project was built to demonstrate real-world integration of **Stripe Payment
 
 ## Tech Stack
 
-- **Next.js 15** — App Router, Server Actions, Middleware
+- **Next.js 16** — App Router, Server Actions, Middleware
 - **Supabase** — Auth (email/password) + PostgreSQL + Row Level Security
 - **Stripe** — Checkout Sessions, Webhooks, Subscription & One-time payments
 - **Tailwind CSS** + **shadcn/ui**

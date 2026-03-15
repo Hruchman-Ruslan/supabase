@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+stripe.exe
 
 # debug
 npm-debug.log*
